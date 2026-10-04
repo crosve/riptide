@@ -1,0 +1,235 @@
+<mxfile host="65bd71144e">
+    <diagram name="Riptide ingestion pipeline" id="riptide-ingest">
+        <mxGraphModel dx="667" dy="310" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="1800" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=20;" value="&lt;b&gt;Riptide — Ingestion pipeline overview&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:12px&quot;&gt;Upload → executor → extract → clean → chunk → embed → index&lt;/font&gt;" vertex="1">
+                    <mxGeometry height="50" width="700" x="20" y="10" as="geometry"/>
+                </mxCell>
+                <mxCell id="s1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;b&gt;1. Upload&lt;/b&gt;&lt;br&gt;API / SDK / Web UI" vertex="1">
+                    <mxGeometry height="60" width="240" x="420" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="s2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;b&gt;2. Auth + policy check&lt;/b&gt;&lt;br&gt;Least-privilege gate" vertex="1">
+                    <mxGeometry height="60" width="240" x="420" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;b&gt;3. Store raw file (bronze)&lt;/b&gt;&lt;br&gt;Create document_version" vertex="1">
+                    <mxGeometry height="60" width="240" x="420" y="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="s4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;b&gt;4. Executor / orchestrator&lt;/b&gt;&lt;br&gt;Runs the pipeline plan" vertex="1">
+                    <mxGeometry height="60" width="240" x="420" y="470" as="geometry"/>
+                </mxCell>
+                <mxCell id="s5" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;b&gt;5. Detect type&lt;/b&gt;&lt;br&gt;+ route" vertex="1">
+                    <mxGeometry height="80" width="200" x="440" y="600" as="geometry"/>
+                </mxCell>
+                <mxCell id="a1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;b&gt;PDF&lt;/b&gt;&lt;br&gt;text layer" vertex="1">
+                    <mxGeometry height="60" width="150" x="220" y="740" as="geometry"/>
+                </mxCell>
+                <mxCell id="a2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;b&gt;Scanned / image&lt;/b&gt;&lt;br&gt;OCR" vertex="1">
+                    <mxGeometry height="60" width="150" x="390" y="740" as="geometry"/>
+                </mxCell>
+                <mxCell id="a3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;b&gt;CSV / XLSX&lt;/b&gt;&lt;br&gt;tabular" vertex="1">
+                    <mxGeometry height="60" width="150" x="560" y="740" as="geometry"/>
+                </mxCell>
+                <mxCell id="a4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;b&gt;DOCX / HTML / MD&lt;/b&gt;&lt;br&gt;rich text" vertex="1">
+                    <mxGeometry height="60" width="150" x="730" y="740" as="geometry"/>
+                </mxCell>
+                <mxCell id="s7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="&lt;b&gt;6. CanonicalDoc (silver)&lt;/b&gt;&lt;br&gt;Common document model" vertex="1">
+                    <mxGeometry height="60" width="240" x="420" y="860" as="geometry"/>
+                </mxCell>
+                <mxCell id="s8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="&lt;b&gt;7. Clean + normalize&lt;/b&gt;" vertex="1">
+                    <mxGeometry height="60" width="240" x="420" y="990" as="geometry"/>
+                </mxCell>
+                <mxCell id="s9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="&lt;b&gt;8. Chunk&lt;/b&gt;&lt;br&gt;Structure-aware strategy" vertex="1">
+                    <mxGeometry height="60" width="240" x="420" y="1120" as="geometry"/>
+                </mxCell>
+                <mxCell id="s10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="&lt;b&gt;9. Enrich metadata&lt;/b&gt;&lt;br&gt;ACLs, lineage, citations" vertex="1">
+                    <mxGeometry height="60" width="240" x="420" y="1250" as="geometry"/>
+                </mxCell>
+                <mxCell id="s11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="&lt;b&gt;10. Embed&lt;/b&gt;&lt;br&gt;Swappable embedder adapter" vertex="1">
+                    <mxGeometry height="60" width="240" x="420" y="1380" as="geometry"/>
+                </mxCell>
+                <mxCell id="s12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="&lt;b&gt;11. Index (gold)&lt;/b&gt;&lt;br&gt;Vectors + BM25" vertex="1">
+                    <mxGeometry height="60" width="240" x="420" y="1510" as="geometry"/>
+                </mxCell>
+                <mxCell id="dlq" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" value="&lt;b&gt;Dead-letter queue&lt;/b&gt;&lt;br&gt;failed jobs + error, replayable" vertex="1">
+                    <mxGeometry height="60" width="170" x="220" y="610" as="geometry"/>
+                </mxCell>
+                <mxCell id="db_meta" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" value="&lt;b&gt;Postgres&lt;/b&gt;&lt;br&gt;metadata, ACLs, versions (RLS)" vertex="1">
+                    <mxGeometry height="80" width="170" x="20" y="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="db_raw" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" value="&lt;b&gt;Object store&lt;/b&gt;&lt;br&gt;raw files (bronze)" vertex="1">
+                    <mxGeometry height="80" width="170" x="20" y="330" as="geometry"/>
+                </mxCell>
+                <mxCell id="db_silver" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" value="&lt;b&gt;Object store&lt;/b&gt;&lt;br&gt;CanonicalDoc JSON (silver)" vertex="1">
+                    <mxGeometry height="80" width="170" x="20" y="850" as="geometry"/>
+                </mxCell>
+                <mxCell id="db_index" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" value="&lt;b&gt;Hybrid index&lt;/b&gt;&lt;br&gt;pgvector + BM25, per-tenant namespace (gold)" vertex="1">
+                    <mxGeometry height="80" width="170" x="20" y="1500" as="geometry"/>
+                </mxCell>
+                <mxCell id="n1" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Upload&lt;/b&gt;&lt;br&gt;• Scoped API key (tenant + collection)&lt;br&gt;• Idempotency-Key header prevents duplicate uploads&lt;br&gt;• Returns job_id right away (202 Accepted)&lt;br&gt;• Size limit + allowed types checked here" vertex="1">
+                    <mxGeometry height="100" width="340" x="920" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="n2" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Auth + policy&lt;/b&gt;&lt;br&gt;• Resolve caller → user, teams, roles&lt;br&gt;• Check ingest permission on target collection&lt;br&gt;• Set tenant context for Postgres RLS&lt;br&gt;• Rate limit + write to audit log" vertex="1">
+                    <mxGeometry height="100" width="340" x="920" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="n3" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Raw storage + versioning&lt;/b&gt;&lt;br&gt;• SHA-256 content hash → skip exact duplicates&lt;br&gt;• Same document_id + new hash = new version&lt;br&gt;• Immutable, encrypted with per-tenant key&lt;br&gt;• Path: tenants/{t}/docs/{d}/v{n}/raw" vertex="1">
+                    <mxGeometry height="100" width="340" x="920" y="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="n4" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Executor&lt;/b&gt;&lt;br&gt;• Queue-driven (Redis/RQ or SQS)&lt;br&gt;• Every stage idempotent: key = version_id + stage&lt;br&gt;• Retries with exponential backoff → DLQ after N&lt;br&gt;• Status: queued → extracting → chunking → indexed&lt;br&gt;• Webhook or poll endpoint for developers" vertex="1">
+                    <mxGeometry height="115" width="340" x="920" y="440" as="geometry"/>
+                </mxCell>
+                <mxCell id="n5" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Detect + route&lt;/b&gt;&lt;br&gt;• Sniff magic bytes, never trust the extension&lt;br&gt;• PDF with no text layer → OCR adapter&lt;br&gt;• Builds the plan: extractor + chunker + embedder" vertex="1">
+                    <mxGeometry height="85" width="340" x="920" y="590" as="geometry"/>
+                </mxCell>
+                <mxCell id="n6" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Extractor adapters&lt;/b&gt;&lt;br&gt;• Interface: supports(mime), extract(blob) → CanonicalDoc&lt;br&gt;• New format = new adapter, no core changes&lt;br&gt;• Tools: Docling / Unstructured, pandas, Tesseract" vertex="1">
+                    <mxGeometry height="90" width="340" x="920" y="725" as="geometry"/>
+                </mxCell>
+                <mxCell id="n7" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;CanonicalDoc&lt;/b&gt;&lt;br&gt;• Format-agnostic elements: heading, paragraph, table, list&lt;br&gt;• Keeps page number + section path for citations&lt;br&gt;• Persisted, so later stages re-run without re-extracting" vertex="1">
+                    <mxGeometry height="90" width="340" x="920" y="845" as="geometry"/>
+                </mxCell>
+                <mxCell id="n8" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Cleaning&lt;/b&gt;&lt;br&gt;• Strip repeating headers/footers + page numbers&lt;br&gt;• Normalize Unicode and whitespace&lt;br&gt;• Optional PII detection / redaction&lt;br&gt;• Language detection for multilingual routing" vertex="1">
+                    <mxGeometry height="100" width="340" x="920" y="970" as="geometry"/>
+                </mxCell>
+                <mxCell id="n9" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Chunking&lt;/b&gt;&lt;br&gt;• Split on structure (headings), not fixed character counts&lt;br&gt;• ~300–800 tokens with small overlap&lt;br&gt;• Tables: row groups, repeat column headers, never split a row&lt;br&gt;• Parent-child: search small chunks, return parent section&lt;br&gt;• Prefix a contextual header: Doc › Section › Subsection" vertex="1">
+                    <mxGeometry height="120" width="340" x="920" y="1090" as="geometry"/>
+                </mxCell>
+                <mxCell id="n10" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Enrichment&lt;/b&gt;&lt;br&gt;• ACL snapshot: tenant_id, allowed_team_ids, classification&lt;br&gt;• Lineage: doc_version_id, pipeline_version, chunk hash&lt;br&gt;• Citation: source page + section" vertex="1">
+                    <mxGeometry height="90" width="340" x="920" y="1235" as="geometry"/>
+                </mxCell>
+                <mxCell id="n11" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Embedding&lt;/b&gt;&lt;br&gt;• Batch requests; store embedding_model_id + dims per vector&lt;br&gt;• Skip chunks whose hash didn&#39;t change since last version&lt;br&gt;• Hosted vs self-hosted model is just a different adapter" vertex="1">
+                    <mxGeometry height="90" width="340" x="920" y="1365" as="geometry"/>
+                </mxCell>
+                <mxCell id="n12" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fontSize=11;" value="&lt;b&gt;Indexing&lt;/b&gt;&lt;br&gt;• Write vectors + BM25 text into the tenant namespace&lt;br&gt;• Mark previous version superseded (not deleted)&lt;br&gt;• Set status = indexed, fire webhook&lt;br&gt;• Retrieval filters on ACL fields BEFORE ranking" vertex="1">
+                    <mxGeometry height="100" width="340" x="920" y="1490" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg_t" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;" value="&lt;b&gt;Legend&lt;/b&gt;" vertex="1">
+                    <mxGeometry height="20" width="100" x="20" y="1620" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Intake" vertex="1">
+                    <mxGeometry height="30" width="110" x="20" y="1650" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Orchestration" vertex="1">
+                    <mxGeometry height="30" width="110" x="140" y="1650" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Transform" vertex="1">
+                    <mxGeometry height="30" width="110" x="260" y="1650" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="Embed + index" vertex="1">
+                    <mxGeometry height="30" width="110" x="380" y="1650" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" value="Failure path" vertex="1">
+                    <mxGeometry height="30" width="110" x="500" y="1650" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg6" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" value="Dashed = storage read/write" vertex="1">
+                    <mxGeometry height="30" width="200" x="630" y="1650" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="s1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" target="s2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="s2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" target="s3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="s3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;fontSize=11;" target="s4" value="enqueue job">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="s4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" target="s5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5a" edge="1" parent="1" source="s5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="a1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5b" edge="1" parent="1" source="s5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="a2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5c" edge="1" parent="1" source="s5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="a3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5d" edge="1" parent="1" source="s5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="a4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6a" edge="1" parent="1" source="a1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="s7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6b" edge="1" parent="1" source="a2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="s7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6c" edge="1" parent="1" source="a3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="s7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6d" edge="1" parent="1" source="a4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="s7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="s7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" target="s8">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="s8" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" target="s9">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="1" source="s9" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" target="s10">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" source="s10" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" target="s11">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="1" source="s11" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;" target="s12">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_dlq" edge="1" parent="1" source="s4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#b85450;fontColor=#b85450;fontSize=11;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" target="dlq" value="after N retries">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="st1" edge="1" parent="1" source="s2" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;endArrow=open;startArrow=open;strokeColor=#666666;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" target="db_meta" value="read ACLs">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="st2" edge="1" parent="1" source="s3" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;endArrow=open;strokeColor=#666666;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" target="db_raw" value="write raw">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="st3" edge="1" parent="1" source="s7" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;endArrow=open;strokeColor=#666666;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" target="db_silver" value="persist">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="st4" edge="1" parent="1" source="s12" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;endArrow=open;strokeColor=#666666;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" target="db_index" value="upsert">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1" edge="1" parent="1" source="s1" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2" edge="1" parent="1" source="s2" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3" edge="1" parent="1" source="s3" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4" edge="1" parent="1" source="s4" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c5" edge="1" parent="1" source="s5" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c6" edge="1" parent="1" source="a4" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n6">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c7" edge="1" parent="1" source="s7" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c8" edge="1" parent="1" source="s8" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n8">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c9" edge="1" parent="1" source="s9" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n9">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c10" edge="1" parent="1" source="s10" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n10">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c11" edge="1" parent="1" source="s11" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n11">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c12" edge="1" parent="1" source="s12" style="html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="n12">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="y5Hnv5lqn8fxqlQf-04_-1" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=#b85450;fillColor=#f8cecc;align=center;verticalAlign=middle;rounded=0;" value="While extracting the text let&#39;s make sure we&#39;re not vulnerable to any common attacks&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;-Lets reference OWASP 10 and keep a SBOM for external packages&amp;nbsp;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="100" width="170" x="720" y="900" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

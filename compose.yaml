@@ -1,0 +1,48 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source for hot reload. Changes on the host trigger uvicorn --reload.
+      - ./app:/app/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Connection string for the queue backend (Redis / BullMQ).
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    # Override CMD is not needed; the Dockerfile already runs uvicorn --reload.
+
+  worker:
+    build: .
+    volumes:
+      # Mount source so --watch picks up task changes without a rebuild.
+      - ./app:/app/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    # arq worker with hot reload on ./app (watchfiles ships with the image).
+    command: ["arq", "app.worker.WorkerSettings", "--watch", "/app/app"]
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      # Persist queue data across restarts.
+      - redis-data:/data
+    # Enable append-only file so jobs survive a container restart.
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redis-data:
