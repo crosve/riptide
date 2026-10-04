@@ -10,5 +10,7 @@ __pycache__
 .mypy_cache
 *.drawio
 diagrams
+db
+scripts
 README.md
 .claude

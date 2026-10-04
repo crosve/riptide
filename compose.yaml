@@ -8,12 +8,28 @@ services:
       - ./app:/app/app
     environment:
       - PYTHONUNBUFFERED=1
-      # Connection string for the queue backend (Redis / BullMQ).
       - REDIS_URL=redis://redis:6379/0
+      # API request path connects as a login role that is a member of riptide_api.
+      - DATABASE_URL=postgresql://riptide_api_login:api_pw@postgres:5432/riptide
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     # Override CMD is not needed; the Dockerfile already runs uvicorn --reload.
+
+  # One-shot: apply migrations as the schema owner, then exit. api/worker wait for it.
+  migrate:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      - MIGRATION_DATABASE_URL=postgresql+psycopg://riptide_owner:owner_pw@postgres:5432/riptide
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
 
   worker:
     build: .
@@ -23,9 +39,15 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - REDIS_URL=redis://redis:6379/0
+      # Ingestion path connects as a login role that is a member of riptide_worker.
+      - DATABASE_URL=postgresql://riptide_worker_login:worker_pw@postgres:5432/riptide
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     # arq worker with hot reload on ./app (watchfiles ships with the image).
     command: ["arq", "app.worker.WorkerSettings", "--watch", "/app/app"]
 
@@ -44,5 +66,26 @@ services:
       timeout: 3s
       retries: 5
 
+  postgres:
+    # pgvector 0.8+ (iterative HNSW scans) on Postgres 16.
+    image: pgvector/pgvector:pg16
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=riptide
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      # First-boot provisioning: roles + extensions only. The schema itself is
+      # applied by the `migrate` service via Alembic, not here.
+      - ./db/bootstrap.sql:/docker-entrypoint-initdb.d/00_bootstrap.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d riptide"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
 volumes:
   redis-data:
+  pg-data:
