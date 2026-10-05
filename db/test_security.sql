@@ -394,6 +394,354 @@ DO $$ DECLARE vis int; dflt int; BEGIN
 END $$;
 RESET ROLE;
 
+-- ============================================================================
+-- Step 3: admin authorization (gated writes via riptide_api)
+-- Note: INSERT/WITH-CHECK and column-GRANT denials raise (caught below);
+-- UPDATE/DELETE blocked by USING silently affect 0 rows (asserted via ROW_COUNT).
+-- ============================================================================
+
+-- Setup: make carol a (non-admin) OWNER of col_sec, and give bob his own API key.
+RESET ROLE;
+SELECT set_config('app.tenant_id', :'ta', false);
+SET ROLE riptide_worker;
+INSERT INTO collection_grants (tenant_id, collection_id, user_id, role)
+    VALUES (:'ta', :'col_sec', :'carol', 'owner');
+INSERT INTO api_keys (id, tenant_id, acts_as_user, key_prefix, key_hash)
+    VALUES ('c0000000-0000-0000-0000-000000000002', :'ta', :'bob', 'pfx_bob', 'h');
+RESET ROLE;
+
+-- == T26 collection owner can add a grant on their collection ===============
+SELECT set_config('app.user_id', :'carol', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO collection_grants (tenant_id, collection_id, user_id, role)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','ac000000-0000-0000-0000-000000000002',
+                'a0000000-0000-0000-0000-000000000003','viewer');
+        INSERT INTO _results(name,passed,detail) VALUES ('T26 owner adds grant on own collection', true, 'ok');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T26 owner adds grant on own collection', false, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T27 viewer cannot add a grant =========================================
+SELECT set_config('app.user_id', :'alice', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO collection_grants (tenant_id, collection_id, user_id, role)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','ac000000-0000-0000-0000-000000000001',
+                'a0000000-0000-0000-0000-000000000003','viewer');
+        INSERT INTO _results(name,passed,detail) VALUES ('T27 viewer cannot add grant', false, 'insert succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T27 viewer cannot add grant', true, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T28 editor (not owner) cannot add a grant =============================
+SELECT set_config('app.user_id', :'dave', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO collection_grants (tenant_id, collection_id, user_id, role)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','ac000000-0000-0000-0000-000000000001',
+                'a0000000-0000-0000-0000-000000000003','viewer');
+        INSERT INTO _results(name,passed,detail) VALUES ('T28 editor cannot add grant', false, 'insert succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T28 editor cannot add grant', true, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T29 tenant admin can add a grant on any collection ====================
+SELECT set_config('app.user_id', :'admin_a', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO collection_grants (tenant_id, collection_id, user_id, role)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','ac000000-0000-0000-0000-000000000002',
+                'a0000000-0000-0000-0000-000000000005','viewer');
+        INSERT INTO _results(name,passed,detail) VALUES ('T29 admin adds grant on any collection', true, 'ok');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T29 admin adds grant on any collection', false, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T30 owner can delete a grant on their collection ======================
+SELECT set_config('app.user_id', :'carol', false);
+SET ROLE riptide_api;
+DO $$ DECLARE n int; BEGIN
+    DELETE FROM collection_grants
+    WHERE tenant_id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+      AND collection_id='ac000000-0000-0000-0000-000000000002'
+      AND user_id='a0000000-0000-0000-0000-000000000003';
+    GET DIAGNOSTICS n = ROW_COUNT;
+    INSERT INTO _results(name,passed,detail) VALUES ('T30 owner deletes grant on own collection', n=1, format('rows=%s', n));
+END $$;
+RESET ROLE;
+
+-- == T31 non-owner cannot delete a grant (USING -> 0 rows) =================
+SELECT set_config('app.user_id', :'alice', false);
+SET ROLE riptide_api;
+DO $$ DECLARE n int; BEGIN
+    DELETE FROM collection_grants
+    WHERE tenant_id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+      AND collection_id='ac000000-0000-0000-0000-000000000001'
+      AND team_id='a1000000-0000-0000-0000-000000000001';
+    GET DIAGNOSTICS n = ROW_COUNT;
+    INSERT INTO _results(name,passed,detail) VALUES ('T31 non-owner cannot delete grant', n=0, format('rows=%s', n));
+END $$;
+RESET ROLE;
+
+-- == T32 owner cannot move a grant to a collection they do not own =========
+SELECT set_config('app.user_id', :'carol', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        UPDATE collection_grants SET collection_id='ac000000-0000-0000-0000-000000000001'
+        WHERE tenant_id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+          AND collection_id='ac000000-0000-0000-0000-000000000002'
+          AND user_id='a0000000-0000-0000-0000-000000000004';
+        INSERT INTO _results(name,passed,detail) VALUES ('T32 owner cannot move grant to un-owned collection', false, 'update succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T32 owner cannot move grant to un-owned collection', true, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T33/T34 collections: tenant admins only ===============================
+SELECT set_config('app.user_id', :'admin_a', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO collections (tenant_id, name) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','Admin Made');
+        INSERT INTO _results(name,passed,detail) VALUES ('T33 admin can create collection', true, 'ok');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T33 admin can create collection', false, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+SELECT set_config('app.user_id', :'carol', false);  -- non-admin, even though owner of col_sec
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO collections (tenant_id, name) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','Carol Made');
+        INSERT INTO _results(name,passed,detail) VALUES ('T34 non-admin cannot create collection', false, 'insert succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T34 non-admin cannot create collection', true, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T35/T36 teams + membership: tenant admins only ========================
+SELECT set_config('app.user_id', :'admin_a', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO teams (id, tenant_id, name)
+        VALUES ('a1000000-0000-0000-0000-000000000002','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','Sales');
+        INSERT INTO team_members (tenant_id, team_id, user_id)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','a1000000-0000-0000-0000-000000000002',
+                'a0000000-0000-0000-0000-000000000003');
+        INSERT INTO _results(name,passed,detail) VALUES ('T35 admin can create team + add member', true, 'ok');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T35 admin can create team + add member', false, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+SELECT set_config('app.user_id', :'dave', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO team_members (tenant_id, team_id, user_id)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','a1000000-0000-0000-0000-000000000001',
+                'a0000000-0000-0000-0000-000000000005');
+        INSERT INTO _results(name,passed,detail) VALUES ('T36 non-admin cannot add team member', false, 'insert succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T36 non-admin cannot add team member', true, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T37-T40 users: admin-managed, sensitive columns locked out ============
+SELECT set_config('app.user_id', :'admin_a', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO users (tenant_id, email, display_name)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','newuser@a.test','New User');
+        INSERT INTO _results(name,passed,detail) VALUES ('T37 admin can create user (safe columns)', true, 'ok');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T37 admin can create user (safe columns)', false, 'blocked: '||SQLERRM);
+    END;
+    BEGIN
+        INSERT INTO users (tenant_id, email, display_name, is_tenant_admin)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','evil@a.test','Evil', true);
+        INSERT INTO _results(name,passed,detail) VALUES ('T38 cannot set is_tenant_admin via API (column)', false, 'insert succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T38 cannot set is_tenant_admin via API (column)', true, 'blocked: '||SQLERRM);
+    END;
+    BEGIN
+        UPDATE users SET display_name='Alice R.' WHERE id='a0000000-0000-0000-0000-000000000002';
+        INSERT INTO _results(name,passed,detail) VALUES ('T39 admin can update user display_name', true, 'ok');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T39 admin can update user display_name', false, 'blocked: '||SQLERRM);
+    END;
+    BEGIN
+        UPDATE users SET clearance_level=3 WHERE id='a0000000-0000-0000-0000-000000000002';
+        INSERT INTO _results(name,passed,detail) VALUES ('T40 cannot raise clearance via API (column)', false, 'update succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T40 cannot raise clearance via API (column)', true, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T41 non-admin cannot update any user (USING -> 0 rows) =================
+SELECT set_config('app.user_id', :'alice', false);
+SET ROLE riptide_api;
+DO $$ DECLARE n int; BEGIN
+    UPDATE users SET display_name='self' WHERE id='a0000000-0000-0000-0000-000000000002';
+    GET DIAGNOSTICS n = ROW_COUNT;
+    INSERT INTO _results(name,passed,detail) VALUES ('T41 non-admin cannot update users', n=0, format('rows=%s', n));
+END $$;
+RESET ROLE;
+
+-- == T42-T46 api_keys: own keys (self) or admin ============================
+SELECT set_config('app.user_id', :'alice', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO api_keys (id, tenant_id, acts_as_user, key_prefix, key_hash)
+        VALUES ('c0000000-0000-0000-0000-000000000001','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                'a0000000-0000-0000-0000-000000000002','pfx_t42','h');
+        INSERT INTO _results(name,passed,detail) VALUES ('T42 user creates own API key', true, 'ok');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T42 user creates own API key', false, 'blocked: '||SQLERRM);
+    END;
+    BEGIN  -- revoke own key
+        UPDATE api_keys SET revoked_at=now() WHERE id='c0000000-0000-0000-0000-000000000001';
+        INSERT INTO _results(name,passed,detail) VALUES ('T43 user revokes own API key', true, 'ok');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T43 user revokes own API key', false, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+SELECT set_config('app.user_id', :'bob', false);
+SET ROLE riptide_api;
+DO $$ DECLARE n int; BEGIN
+    BEGIN  -- cannot create a key acting as someone else
+        INSERT INTO api_keys (tenant_id, acts_as_user, key_prefix, key_hash)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','a0000000-0000-0000-0000-000000000004','pfx_t44','h');
+        INSERT INTO _results(name,passed,detail) VALUES ('T44 cannot create key acting as another user', false, 'insert succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T44 cannot create key acting as another user', true, 'blocked: '||SQLERRM);
+    END;
+    -- cannot touch someone else's key (USING -> 0 rows)
+    UPDATE api_keys SET revoked_at=now() WHERE id='c0000000-0000-0000-0000-000000000001';
+    GET DIAGNOSTICS n = ROW_COUNT;
+    INSERT INTO _results(name,passed,detail) VALUES ('T45 cannot revoke another user''s key', n=0, format('rows=%s', n));
+    BEGIN  -- cannot flip acts_as_user on own key (WITH CHECK)
+        UPDATE api_keys SET acts_as_user='a0000000-0000-0000-0000-000000000004'
+        WHERE id='c0000000-0000-0000-0000-000000000002';
+        INSERT INTO _results(name,passed,detail) VALUES ('T46 cannot flip acts_as_user on own key', false, 'update succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T46 cannot flip acts_as_user on own key', true, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+SELECT set_config('app.user_id', :'admin_a', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO api_keys (tenant_id, acts_as_user, key_prefix, key_hash)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','a0000000-0000-0000-0000-000000000002','pfx_t47','h');
+        INSERT INTO _results(name,passed,detail) VALUES ('T47 admin creates key for another user', true, 'ok');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T47 admin creates key for another user', false, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T48 cross-tenant admin write is blocked ===============================
+SELECT set_config('app.user_id', :'admin_a', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO collections (tenant_id, name) VALUES ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb','cross');
+        INSERT INTO _results(name,passed,detail) VALUES ('T48 admin cannot write another tenant', false, 'insert succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T48 admin cannot write another tenant', true, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T49 grant via API propagates to chunk ACLs ============================
+SELECT set_config('app.user_id', :'carol', false);   -- owner of col_sec
+SET ROLE riptide_api;
+INSERT INTO collection_grants (tenant_id, collection_id, user_id, role)
+    VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','ac000000-0000-0000-0000-000000000002',
+            'a0000000-0000-0000-0000-000000000003','viewer');
+RESET ROLE;
+SELECT set_config('app.user_id', :'bob', false);
+SET ROLE riptide_api;
+DO $$ DECLARE cc int; BEGIN
+    SELECT count(*) INTO cc FROM chunks;   -- bob should now see c3 in col_sec
+    INSERT INTO _results(name,passed,detail) VALUES ('T49 API grant re-stamps chunk ACL (bob sees c3)', cc=1, format('bob chunks=%s', cc));
+END $$;
+RESET ROLE;
+
+-- == T50-T52 last-owner delete: allowed, then lockout, then admin recovery ==
+SELECT set_config('app.user_id', :'carol', false);
+SET ROLE riptide_api;
+DO $$ DECLARE n int; BEGIN
+    DELETE FROM collection_grants
+    WHERE tenant_id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+      AND collection_id='ac000000-0000-0000-0000-000000000002'
+      AND user_id='a0000000-0000-0000-0000-000000000004' AND role='owner';
+    GET DIAGNOSTICS n = ROW_COUNT;
+    INSERT INTO _results(name,passed,detail) VALUES ('T50 owner can delete own owner grant', n=1, format('rows=%s', n));
+END $$;
+DO $$ BEGIN
+    BEGIN  -- carol is no longer owner -> cannot add grants
+        INSERT INTO collection_grants (tenant_id, collection_id, user_id, role)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','ac000000-0000-0000-0000-000000000002',
+                'a0000000-0000-0000-0000-000000000005','viewer');
+        INSERT INTO _results(name,passed,detail) VALUES ('T51 after self-removal, ex-owner is locked out', false, 'insert succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T51 after self-removal, ex-owner is locked out', true, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+SELECT set_config('app.user_id', :'admin_a', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN  -- tenant admin always recovers
+        INSERT INTO collection_grants (tenant_id, collection_id, user_id, role)
+        VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','ac000000-0000-0000-0000-000000000002',
+                'a0000000-0000-0000-0000-000000000004','owner');
+        INSERT INTO _results(name,passed,detail) VALUES ('T52 tenant admin recovers ownership', true, 'ok');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T52 tenant admin recovers ownership', false, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
+-- == T53 fail closed: no user set -> admin write blocked ===================
+SELECT set_config('app.user_id', '', false);
+SET ROLE riptide_api;
+DO $$ BEGIN
+    BEGIN
+        INSERT INTO teams (tenant_id, name) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','NoUser');
+        INSERT INTO _results(name,passed,detail) VALUES ('T53 fail closed: no user -> write blocked', false, 'insert succeeded!');
+    EXCEPTION WHEN others THEN
+        INSERT INTO _results(name,passed,detail) VALUES ('T53 fail closed: no user -> write blocked', true, 'blocked: '||SQLERRM);
+    END;
+END $$;
+RESET ROLE;
+
 -- ----------------------------------------------------------------------------
 -- Report
 -- ----------------------------------------------------------------------------
