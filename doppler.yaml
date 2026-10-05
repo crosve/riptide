@@ -1,0 +1,6 @@
+# Repo-level Doppler setup. Pins which project/config `doppler run` uses here, so
+# contributors just run `doppler setup` (no interactive project picking).
+# Contains no secrets — only the project/config names.
+setup:
+  project: riptide
+  config: dev

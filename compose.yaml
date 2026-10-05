@@ -7,10 +7,14 @@ services:
       # Mount source for hot reload. Changes on the host trigger uvicorn --reload.
       - ./app:/app/app
     environment:
+      # Values fall back to dev defaults; Doppler/.env override them.
       - PYTHONUNBUFFERED=1
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       # API request path connects as a login role that is a member of riptide_api.
-      - DATABASE_URL=postgresql://riptide_api_login:api_pw@postgres:5432/riptide
+      - DATABASE_URL=${API_DATABASE_URL:-postgresql://riptide_api_login:api_pw@postgres:5432/riptide}
+      - API_KEY_PEPPER=${API_KEY_PEPPER:-dev-pepper-change-me}
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-change-me}
+      - RIPTIDE_DEV_AUTH=${RIPTIDE_DEV_AUTH:-0}
     depends_on:
       redis:
         condition: service_healthy
@@ -25,7 +29,7 @@ services:
     build: .
     command: ["alembic", "upgrade", "head"]
     environment:
-      - MIGRATION_DATABASE_URL=postgresql+psycopg://riptide_owner:owner_pw@postgres:5432/riptide
+      - MIGRATION_DATABASE_URL=${MIGRATION_DATABASE_URL:-postgresql+psycopg://riptide_owner:owner_pw@postgres:5432/riptide}
     depends_on:
       postgres:
         condition: service_healthy
@@ -38,9 +42,9 @@ services:
       - ./app:/app/app
     environment:
       - PYTHONUNBUFFERED=1
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       # Ingestion path connects as a login role that is a member of riptide_worker.
-      - DATABASE_URL=postgresql://riptide_worker_login:worker_pw@postgres:5432/riptide
+      - DATABASE_URL=${WORKER_DATABASE_URL:-postgresql://riptide_worker_login:worker_pw@postgres:5432/riptide}
     depends_on:
       redis:
         condition: service_healthy
@@ -71,8 +75,8 @@ services:
     image: pgvector/pgvector:pg16
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=riptide
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-riptide}
     ports:
       - "5432:5432"
     volumes:

@@ -8,3 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local env / secrets — source of truth is Doppler. Never commit real values.
+.env
+.env.*
+!.env.example

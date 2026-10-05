@@ -46,6 +46,8 @@ compose.yaml       # dev runtime: api, worker, migrate, redis, postgres — bind
 diagrams/          # draw.io diagrams, mirrors the module layout (see diagrams/README.md)
   system/          # cross-cutting (ingestion pipeline)
   db/              # ERD (generated) + conceptual data model (hand-authored)
+.env.example       # config contract (every env key; dummy values) — real values live in Doppler
+doppler.yaml       # pins project/config for `doppler run` (no secrets)
 .dockerignore
 pyproject.toml     # dependencies (edit via `uv add` / `uv remove`)
 uv.lock            # locked versions — committed, never edited by hand
@@ -69,6 +71,8 @@ uv.lock            # locked versions — committed, never edited by hand
 | Roll back one migration | `uv run alembic downgrade -1` |
 | Show current revision | `uv run alembic current` |
 | Regenerate the DB ERD | `uv run python scripts/gen_erd.py` |
+| Run with secrets injected | `doppler run -- <cmd>` (e.g. `doppler run -- docker compose up`) |
+| Link repo to Doppler (once) | `doppler setup` (reads `doppler.yaml`) |
 
 Alembic reads `MIGRATION_DATABASE_URL` (schema owner, `postgresql+psycopg://…`). In
 Docker the one-shot `migrate` service applies migrations before api/worker start.
@@ -86,7 +90,7 @@ The API serves on `http://localhost:8000`; interactive docs at `/docs`.
 - **Dependencies**: add/remove only through `uv add` / `uv remove` so `pyproject.toml` and `uv.lock` stay in sync. Commit both. After changing dependencies, rebuild the image (`docker compose up --build`) — hot reload only covers code.
 - **Keep it lean**: this is a base. Don't add dependencies, config, or abstractions until a concrete need exists. Prefer the standard library and FastAPI built-ins first.
 - **Routes & structure**: see `app/CLAUDE.md` for code-level conventions.
-- **No secrets in the repo**: configuration comes from environment variables (set in `compose.yaml` or a local `.env`, which must stay git-ignored). Never commit credentials.
+- **No secrets in the repo**: configuration comes from environment variables. **Doppler is the source of truth** (`doppler run -- <cmd>`); `.env.example` is the committed contract, `.env` is git-ignored. `compose.yaml` uses `${VAR:-devdefault}` so bare `docker compose up` works on dev defaults while Doppler/.env override. When you add a new env var, add it to `.env.example`, to the relevant service in `compose.yaml`, and read it via `app/core/config.py`. Only local-dev Postgres role passwords stay as fixed non-secret defaults (they guard a local container); real secrets (`API_KEY_PEPPER`, `JWT_SECRET`, prod DB URLs) live only in Doppler.
 - **Verify before done**: a change isn't done until the app starts and the touched endpoint responds. Check `docker compose up`, hit the route, and confirm the reload log for code changes.
 - **Match the surrounding code**: follow existing naming, async style, and import order rather than introducing new patterns.
 - **After a schema change** (new migration): add a test in `db/test_security.sql` proving both the allowed and denied path, run `./db/run_tests.sh`, and regenerate the ERD (`uv run python scripts/gen_erd.py`). Keep diagrams current in the same change.

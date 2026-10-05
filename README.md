@@ -35,6 +35,39 @@ PYTHONPATH=. uv run python scripts/seed_demo.py
 curl -H "X-API-Key: <printed key>" http://localhost:8000/documents
 ```
 
+## Configuration & secrets
+
+Config comes from the environment. **[Doppler](https://doppler.com) is the source
+of truth** — real secrets are never committed or kept on disk. `.env.example` is
+the committed contract documenting every key; `.env` is git-ignored.
+
+```bash
+# one-time, per machine (after `doppler login`):
+doppler setup                      # uses doppler.yaml -> project riptide, config dev
+
+# then run anything with secrets injected:
+doppler run -- docker compose up --build
+doppler run -- uv run uvicorn app.main:app --reload
+doppler run -- ./db/run_tests.sh
+```
+
+Without Doppler, `docker compose up` still works on built-in dev defaults, or copy
+`cp .env.example .env` and edit. Keys:
+
+| Key | Purpose |
+| --- | --- |
+| `API_KEY_PEPPER`, `JWT_SECRET` | app secrets — **must** be real per environment |
+| `API_DATABASE_URL` | request-path DSN (role `riptide_api`) |
+| `WORKER_DATABASE_URL` | ingestion DSN (role `riptide_worker`) |
+| `MIGRATION_DATABASE_URL` | migration DSN (role `riptide_owner`, psycopg) |
+| `REDIS_URL` | queue backend |
+| `POSTGRES_PASSWORD`, `POSTGRES_DB` | local Postgres container (dev) |
+| `RIPTIDE_DEV_AUTH` | enables the dev-only token endpoint (keep `0` in prod) |
+
+Local-dev Postgres **role** passwords (`api_pw` etc.) stay fixed non-secret
+defaults in `db/bootstrap.sql` — they only guard a local container. Managed/prod
+databases are provisioned out-of-band; point the `*_DATABASE_URL` keys at them.
+
 ## Architecture
 
 ```
